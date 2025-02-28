@@ -4,6 +4,9 @@ import faiss
 import numpy as np
 from openai import OpenAI
 from typing import List, Dict
+import logging
+from models import Document
+from app import db
 
 # The newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # Do not change this unless explicitly requested by the user
@@ -14,13 +17,45 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 dimension = 1536  # OpenAI embedding dimension
 index = faiss.IndexFlatL2(dimension)
 
-def extract_text_from_pdf(pdf_file) -> str:
-    """Extract text from uploaded PDF file"""
+def load_documents_from_directory(directory: str) -> None:
+    """Load all PDF documents from a directory into the database and FAISS index"""
+    for filename in os.listdir(directory):
+        if filename.endswith('.pdf'):
+            filepath = os.path.join(directory, filename)
+            try:
+                # Check if document already exists
+                existing_doc = Document.query.filter_by(filepath=filepath).first()
+                if existing_doc:
+                    continue
+
+                # Extract text from PDF
+                text = extract_text_from_pdf(filepath)
+
+                # Get embedding and add to FAISS index
+                vector_id = add_to_index(text)
+
+                # Save to database
+                doc = Document(
+                    filepath=filepath,
+                    title=os.path.splitext(filename)[0],
+                    content=text,
+                    vector_id=str(vector_id)
+                )
+                db.session.add(doc)
+                db.session.commit()
+                logging.info(f"Added document: {filename}")
+
+            except Exception as e:
+                logging.error(f"Error processing {filename}: {str(e)}")
+
+def extract_text_from_pdf(pdf_path: str) -> str:
+    """Extract text from PDF file"""
     try:
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
-        text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text()
+        with open(pdf_path, 'rb') as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text()
         return text
     except Exception as e:
         raise Exception(f"Error extracting text from PDF: {str(e)}")
@@ -36,17 +71,23 @@ def get_embedding(text: str) -> List[float]:
     except Exception as e:
         raise Exception(f"Error getting embedding: {str(e)}")
 
-def add_to_index(text: str, doc_id: int) -> int:
+def add_to_index(text: str) -> int:
     """Add document embedding to FAISS index"""
     embedding = get_embedding(text)
     index.add(np.array([embedding]))
     return index.ntotal - 1
 
-def search_similar_chunks(query: str, k: int = 3) -> List[int]:
+def search_similar_chunks(query: str, k: int = 3) -> List[Document]:
     """Search for similar documents using FAISS"""
     query_embedding = get_embedding(query)
     D, I = index.search(np.array([query_embedding]), k)
-    return I[0].tolist()
+
+    # Get documents from database
+    relevant_docs = Document.query.filter(
+        Document.vector_id.in_([str(i) for i in I[0]])
+    ).all()
+
+    return relevant_docs
 
 def get_answer(question: str, context: str) -> str:
     """Get answer from OpenAI using RAG context"""
