@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="mr" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>मराठी सरकारी दस्तऐवज API</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="/static/css/custom.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="text-center mb-4">मराठी सरकारी दस्तऐवज API</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">दस्तऐवज अपलोड</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="uploadForm">
+                            <div class="mb-3">
+                                <label for="pdfFile" class="form-label">PDF फाइल निवडा</label>
+                                <input type="file" class="form-control" id="pdfFile" accept=".pdf" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">अपलोड करा</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">प्रश्न विचारा</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="queryForm">
+                            <div class="mb-3">
+                                <label for="question" class="form-label">तुमचा प्रश्न</label>
+                                <textarea class="form-control" id="question" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">प्रश्न विचारा</button>
+                        </form>
+                        <div class="mt-4">
+                            <h6>उत्तर:</h6>
+                            <div id="answer" class="p-3 bg-light rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">API डॉक्युमेंटेशन</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>एंडपॉइंट्स:</h6>
+                        <ul>
+                            <li><code>POST /upload</code> - PDF दस्तऐवज अपलोड करण्यासाठी</li>
+                            <li><code>POST /query</code> - प्रश्न विचारण्यासाठी</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
